@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import type { Dispatch } from 'react';
 import type { Difficulty, GameState, StationId } from '../../types/game';
 import type { GameAction } from '../../state/actions';
@@ -32,6 +32,17 @@ interface GameProps {
 export const Game = memo(function Game({ state, dispatch }: GameProps) {
   const [diceRolling, setDiceRolling] = useState(false);
   const [threatRolling, setThreatRolling] = useState(false);
+
+  // Escape key cancels die selection during the assign phase
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && state.phase === 'assigning' && state.selectedDieId !== null) {
+        dispatch({ type: 'SELECT_DIE', dieId: null });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dispatch, state.phase, state.selectedDieId]);
 
   const handleNewGame = useCallback(
     (difficulty: Difficulty) => {

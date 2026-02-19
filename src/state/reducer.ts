@@ -57,6 +57,7 @@ export function makeInitialState(): GameState {
     nebulaActive: false,
     commsOfflineActive: false,
     setupDrawsRemaining: 0,
+    usedStationActions: [],
   };
 }
 
@@ -370,6 +371,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'USE_MEDICAL': {
       if (state.status !== 'playing' || state.phase !== 'assigning') return state;
+      if (state.usedStationActions.includes('USE_MEDICAL')) return state;
       const medCount = state.crew.filter((d) => d.location === 'medical').length;
       if (medCount === 0) return state;
       const infirmaryCount = state.crew.filter((d) => d.location === 'infirmary').length;
@@ -377,6 +379,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         crew,
+        usedStationActions: [...state.usedStationActions, 'USE_MEDICAL'],
         log: [...state.log, `Medical: ${infirmaryCount} crew recovered from Infirmary.`],
       };
     }
@@ -442,6 +445,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'USE_SCIENCE_SHIELDS': {
       if (state.status !== 'playing' || state.phase !== 'assigning') return state;
+      if (state.usedStationActions.includes('USE_SCIENCE')) return state;
       const sciCount = state.crew.filter((d) => d.location === 'science').length;
       if (sciCount === 0) return state;
       if (state.nebulaActive) {
@@ -454,12 +458,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         shields,
+        usedStationActions: [...state.usedStationActions, 'USE_SCIENCE'],
         log: [...state.log, `Science: shields recharged to ${shields}/${state.maxShields}.`],
       };
     }
 
     case 'USE_SCIENCE_STASIS': {
       if (state.status !== 'playing' || state.phase !== 'assigning') return state;
+      if (state.usedStationActions.includes('USE_SCIENCE')) return state;
       const sciCount = state.crew.filter((d) => d.location === 'science').length;
       if (sciCount === 0) return state;
       const target = state.activeThreats.find((t) => t.id === action.targetThreatId);
@@ -468,6 +474,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         activeThreats,
+        usedStationActions: [...state.usedStationActions, 'USE_SCIENCE'],
         log: [...state.log, `Science: stasis token placed on ${target.card.name}.`],
       };
     }
@@ -475,6 +482,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'USE_COMMANDER_REROLL': {
       if (state.status !== 'playing' || state.phase !== 'assigning') return state;
       if (state.commsOfflineActive) return state;
+      if (state.usedStationActions.includes('USE_COMMANDER')) return state;
       const cmdCount = state.crew.filter((d) => d.location === 'commander').length;
       if (cmdCount === 0) return state;
       const rerollCount = commanderRerollCount(state.crew);
@@ -504,7 +512,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       // Process scanners again after reroll
       const { crew: crewAfterScanners, extraDraws } = processScanners(crew);
-      let currentState: GameState = { ...state, crew: crewAfterScanners, log };
+      let currentState: GameState = {
+        ...state,
+        crew: crewAfterScanners,
+        log,
+        usedStationActions: [...state.usedStationActions, 'USE_COMMANDER'],
+      };
 
       for (let i = 0; i < extraDraws; i++) {
         currentState = drawAndProcessCard(currentState);
@@ -516,6 +529,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'USE_COMMANDER_CHANGE': {
       if (state.status !== 'playing' || state.phase !== 'assigning') return state;
       if (state.commsOfflineActive) return state;
+      if (state.usedStationActions.includes('USE_COMMANDER')) return state;
       const cmdCount = state.crew.filter((d) => d.location === 'commander').length;
       if (cmdCount === 0) return state;
 
@@ -533,6 +547,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return withPassiveFlags({
         ...state,
         crew,
+        usedStationActions: [...state.usedStationActions, 'USE_COMMANDER'],
         log: [...state.log, `Commander: changed die to ${action.newFace}.`],
       });
     }
@@ -661,6 +676,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         tacticalDice: [],
         drawnCard: null,
         selectedDieId: null,
+        usedStationActions: [],
       });
 
       return withWinLossCheck(nextState);

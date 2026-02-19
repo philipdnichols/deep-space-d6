@@ -268,6 +268,30 @@ describe('USE_MEDICAL', () => {
     expect(next).toBe(s);
   });
 
+  it('blocked on second call (one-use per turn)', () => {
+    const base = playingState();
+    const s = { ...base, crew: base.crew.map((d) => ({ ...d, location: 'pool' as const })) };
+    const assigning = gameReducer(s, {
+      type: 'ROLL_COMPLETE',
+      faces: ['medical', 'tactical', 'engineering', 'commander', 'science', 'engineering'],
+    });
+    const withInjured = {
+      ...assigning,
+      crew: assigning.crew.map((d, i) => (i === 1 ? { ...d, location: 'infirmary' as const } : d)),
+    };
+    const medDie = withInjured.crew.find((d) => d.face === 'medical' && d.location === 'pool')!;
+    const assigned = gameReducer(withInjured, {
+      type: 'ASSIGN_TO_STATION',
+      dieId: medDie.id,
+      stationId: 'medical',
+    });
+    const firstUse = gameReducer(assigned, { type: 'USE_MEDICAL' });
+    expect(firstUse.usedStationActions).toContain('USE_MEDICAL');
+    // Second call is a no-op
+    const secondUse = gameReducer(firstUse, { type: 'USE_MEDICAL' });
+    expect(secondUse).toBe(firstUse);
+  });
+
   it('recovers all crew from infirmary', () => {
     const base = playingState();
     // Reset all crew to pool so ROLL_COMPLETE can assign all 6 faces deterministically,
@@ -409,6 +433,17 @@ describe('THREAT_ROLL_COMPLETE', () => {
 });
 
 describe('ACKNOWLEDGE_GATHER', () => {
+  it('resets usedStationActions for the next turn', () => {
+    const gathering: GameState = {
+      ...playingState(),
+      phase: 'gathering',
+      activeThreats: [],
+      usedStationActions: ['USE_MEDICAL', 'USE_SCIENCE', 'USE_COMMANDER'],
+    };
+    const next = gameReducer(gathering, { type: 'ACKNOWLEDGE_GATHER' });
+    expect(next.usedStationActions).toHaveLength(0);
+  });
+
   it('ignored outside gathering phase', () => {
     const s = playingState(); // rolling phase
     const next = gameReducer(s, { type: 'ACKNOWLEDGE_GATHER' });
@@ -917,6 +952,57 @@ describe('USE_TACTICAL', () => {
 // ── USE_SCIENCE_SHIELDS ────────────────────────────────────────────────────────
 
 describe('USE_SCIENCE_SHIELDS', () => {
+  it('blocked on second call (one-use per turn)', () => {
+    const s = assigningState([
+      'science',
+      'tactical',
+      'engineering',
+      'medical',
+      'commander',
+      'commander',
+    ]);
+    const sciDie = s.crew.find((d) => d.face === 'science' && d.location === 'pool')!;
+    const assigned = gameReducer(s, {
+      type: 'ASSIGN_TO_STATION',
+      dieId: sciDie.id,
+      stationId: 'science',
+    });
+    const depleted: GameState = { ...assigned, shields: 0 };
+    const firstUse = gameReducer(depleted, { type: 'USE_SCIENCE_SHIELDS' });
+    expect(firstUse.usedStationActions).toContain('USE_SCIENCE');
+    const secondUse = gameReducer(firstUse, { type: 'USE_SCIENCE_SHIELDS' });
+    expect(secondUse).toBe(firstUse);
+  });
+
+  it('USE_SCIENCE_STASIS also blocked after shields used (shared science budget)', () => {
+    const s = assigningState([
+      'science',
+      'tactical',
+      'engineering',
+      'medical',
+      'commander',
+      'commander',
+    ]);
+    const sciDie = s.crew.find((d) => d.face === 'science' && d.location === 'pool')!;
+    const assigned = gameReducer(s, {
+      type: 'ASSIGN_TO_STATION',
+      dieId: sciDie.id,
+      stationId: 'science',
+    });
+    const withThreat: GameState = {
+      ...assigned,
+      shields: 0,
+      activeThreats: [makeExternalThreat()],
+    };
+    const afterShields = gameReducer(withThreat, { type: 'USE_SCIENCE_SHIELDS' });
+    // Now try stasis — should be blocked
+    const afterStasis = gameReducer(afterShields, {
+      type: 'USE_SCIENCE_STASIS',
+      targetThreatId: afterShields.activeThreats[0]!.id,
+    });
+    expect(afterStasis).toBe(afterShields);
+  });
+
   it('recharges shields to max', () => {
     const s = assigningState([
       'science',
@@ -1022,6 +1108,57 @@ describe('USE_SCIENCE_STASIS', () => {
 // ── USE_COMMANDER_REROLL ───────────────────────────────────────────────────────
 
 describe('USE_COMMANDER_REROLL', () => {
+  it('blocked on second call (one-use per turn)', () => {
+    const s = assigningState([
+      'commander',
+      'tactical',
+      'engineering',
+      'medical',
+      'science',
+      'engineering',
+    ]);
+    const cmdDie = s.crew.find((d) => d.face === 'commander' && d.location === 'pool')!;
+    const assigned = gameReducer(s, {
+      type: 'ASSIGN_TO_STATION',
+      dieId: cmdDie.id,
+      stationId: 'commander',
+    });
+    const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+    const firstUse = gameReducer(safeAssigned, { type: 'USE_COMMANDER_REROLL' });
+    expect(firstUse.usedStationActions).toContain('USE_COMMANDER');
+    const secondUse = gameReducer(firstUse, { type: 'USE_COMMANDER_REROLL' });
+    expect(secondUse).toBe(firstUse);
+  });
+
+  it('USE_COMMANDER_CHANGE also blocked after reroll used (shared commander budget)', () => {
+    const s = assigningState([
+      'commander',
+      'tactical',
+      'engineering',
+      'medical',
+      'science',
+      'engineering',
+    ]);
+    const cmdDie = s.crew.find((d) => d.face === 'commander' && d.location === 'pool')!;
+    const assigned = gameReducer(s, {
+      type: 'ASSIGN_TO_STATION',
+      dieId: cmdDie.id,
+      stationId: 'commander',
+    });
+    const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+    const afterReroll = gameReducer(safeAssigned, { type: 'USE_COMMANDER_REROLL' });
+    // Pool dice were rerolled; find one to try to change
+    const poolDie = afterReroll.crew.find((d) => d.location === 'pool');
+    if (poolDie) {
+      const afterChange = gameReducer(afterReroll, {
+        type: 'USE_COMMANDER_CHANGE',
+        targetDieId: poolDie.id,
+        newFace: 'medical',
+      });
+      expect(afterChange).toBe(afterReroll);
+    }
+  });
+
   it('rerolls pool dice and logs the action', () => {
     const s = assigningState([
       'commander',

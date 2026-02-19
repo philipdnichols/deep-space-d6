@@ -134,4 +134,8 @@ export interface GameState {
   // Setup draw sequence: counts down from 2 as the player acknowledges initial threat cards.
   // While > 0, ACKNOWLEDGE_DRAW draws another setup card or returns to rolling instead of activating.
   readonly setupDrawsRemaining: number;
+
+  // Station actions consumed this assign phase (reset each turn). Prevents multi-use exploits.
+  // Keys: 'USE_MEDICAL', 'USE_SCIENCE', 'USE_COMMANDER'
+  readonly usedStationActions: ReadonlyArray<string>;
 }

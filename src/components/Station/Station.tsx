@@ -108,13 +108,16 @@ export const Station = memo(function Station({ stationId, state, dispatch }: Sta
             {stationId === 'commander' && hasCmdDice && !commsDisabled && (
               <button
                 className="station-action-btn"
+                disabled={state.usedStationActions.includes('USE_COMMANDER')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setCmdStep('choose');
                   setShowCmdModal(true);
                 }}
               >
-                Use Commander
+                {state.usedStationActions.includes('USE_COMMANDER')
+                  ? 'Commander Used'
+                  : 'Use Commander'}
               </button>
             )}
 
@@ -135,6 +138,10 @@ export const Station = memo(function Station({ stationId, state, dispatch }: Sta
               <>
                 <button
                   className="station-action-btn"
+                  disabled={
+                    state.usedStationActions.includes('USE_MEDICAL') ||
+                    !state.crew.some((d) => d.location === 'infirmary')
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
                     dispatch({ type: 'USE_MEDICAL' });
@@ -164,14 +171,27 @@ export const Station = memo(function Station({ stationId, state, dispatch }: Sta
                     e.stopPropagation();
                     dispatch({ type: 'USE_SCIENCE_SHIELDS' });
                   }}
-                  disabled={state.nebulaActive}
-                  title={state.nebulaActive ? 'Nebula prevents shield recharge' : undefined}
+                  disabled={
+                    state.nebulaActive ||
+                    state.usedStationActions.includes('USE_SCIENCE') ||
+                    state.shields >= state.maxShields
+                  }
+                  title={
+                    state.nebulaActive
+                      ? 'Nebula prevents shield recharge'
+                      : state.usedStationActions.includes('USE_SCIENCE')
+                        ? 'Science action already used this turn'
+                        : state.shields >= state.maxShields
+                          ? 'Shields already at maximum'
+                          : undefined
+                  }
                 >
                   {state.nebulaActive ? 'Shields Blocked' : 'Recharge Shields'}
                 </button>
                 {state.activeThreats.length > 0 && (
                   <button
                     className="station-action-btn"
+                    disabled={state.usedStationActions.includes('USE_SCIENCE')}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSciStep('pick-threat');
