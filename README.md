@@ -34,14 +34,14 @@ See [GAME.md](./GAME.md) for the complete rules, card catalogue, and station des
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| UI | React 19 + TypeScript (strict) |
-| Build | Vite |
-| Unit tests | Vitest (209 tests, 97.7% statement coverage) |
-| E2E tests | Playwright (18 tests, Chromium) |
-| Lint/format | ESLint 9 flat config + Prettier |
-| Deploy | GitHub Actions → GitHub Pages |
+| Layer       | Tech                                         |
+| ----------- | -------------------------------------------- |
+| UI          | React 19 + TypeScript (strict)               |
+| Build       | Vite                                         |
+| Unit tests  | Vitest (209 tests, 97.7% statement coverage) |
+| E2E tests   | Playwright (18 tests, Chromium)              |
+| Lint/format | ESLint 9 flat config + Prettier              |
+| Deploy      | GitHub Actions → GitHub Pages                |
 
 ---
 
