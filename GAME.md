@@ -89,8 +89,18 @@ Uses a Commander die. Choose ONE action:
 
 ### Tactical ✦
 
-Uses one or more Tactical dice. Each die deals **1 damage** to a chosen external threat.
-Damage applies individually — you may split fire across multiple targets.
+Uses one or more Tactical dice. Fires with **concentrated fire**: the first die deals 1 damage,
+and each additional die adds 2 more (formula: `1 + (n−1) × 2`).
+
+| Dice fired | Damage |
+| ---------- | ------ |
+| 1          | 1      |
+| 2          | 3      |
+| 3          | 5      |
+| 4          | 7      |
+
+Damage applies to a single chosen target — you cannot split fire across multiple targets in one
+firing action, but you may fire multiple times per turn by assigning and firing separately.
 
 **Targeting restrictions:**
 

@@ -192,11 +192,11 @@ describe('resolveThreat', () => {
 });
 
 describe('processScanners', () => {
-  it('every 3 scanner dice = 1 extra draw', () => {
+  it('every 3 scanner dice = 1 extra draw, dice stay locked', () => {
     const crew = Array.from({ length: 6 }, (_, i) => makeDie(i, 'scanners'));
     const result = processScanners(crew);
     expect(result.extraDraws).toBe(2);
-    expect(result.crew.every((d) => d.location === 'pool')).toBe(true);
+    expect(result.crew.every((d) => d.location === 'scanners')).toBe(true);
   });
 
   it('2 scanner dice produce no extra draws', () => {
@@ -206,12 +206,12 @@ describe('processScanners', () => {
     expect(result.crew.every((d) => d.location === 'scanners')).toBe(true);
   });
 
-  it('4 scanner dice produce 1 draw, 1 remaining', () => {
+  it('4 scanner dice produce 1 draw, all remain locked', () => {
     const crew = Array.from({ length: 4 }, (_, i) => makeDie(i, 'scanners'));
     const result = processScanners(crew);
     expect(result.extraDraws).toBe(1);
     const inScanners = result.crew.filter((d) => d.location === 'scanners');
-    expect(inScanners).toHaveLength(1);
+    expect(inScanners).toHaveLength(4);
   });
 });
 

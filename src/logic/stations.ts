@@ -107,19 +107,14 @@ export interface ScannersResult {
 }
 
 /**
- * Process scanners: every 3 dice in scanners = draw 1 threat + release those 3 dice.
- * Returns updated crew and how many extra threat cards to draw.
+ * Process scanners: every 3 dice in scanners = draw 1 extra threat card.
+ * Scanner dice remain locked until freed by Medical.
+ * Returns unchanged crew and how many extra threat cards to draw.
  */
 export function processScanners(crew: ReadonlyArray<CrewDie>): ScannersResult {
   const scannerDice = crew.filter((d) => d.location === 'scanners');
   const groups = Math.floor(scannerDice.length / 3);
-  if (groups === 0) return { crew, extraDraws: 0 };
-
-  const toRelease = scannerDice.slice(0, groups * 3).map((d) => d.id);
-  const newCrew = crew.map((d) =>
-    toRelease.includes(d.id) ? { ...d, location: 'pool' as const } : d,
-  );
-  return { crew: newCrew, extraDraws: groups };
+  return { crew, extraDraws: groups };
 }
 
 // ── Gather phase ──────────────────────────────────────────────────────────────

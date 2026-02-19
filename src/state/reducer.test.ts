@@ -96,18 +96,21 @@ describe('ROLL_COMPLETE', () => {
     expect(faces).toContain('tactical');
   });
 
-  it('auto-locks threat dice to scanners and releases them when 3 trigger a draw', () => {
+  it('auto-locks threat dice to scanners and keeps them locked even when 3 trigger a draw', () => {
     const s = playingState();
     const next = gameReducer(s, {
       type: 'ROLL_COMPLETE',
       faces: ['threat', 'threat', 'threat', 'tactical', 'medical', 'commander'],
     });
-    // Exactly 3 threat dice → scanner draw triggered → dice released back to pool
+    // Exactly 3 threat dice → scanner draw triggered → dice stay locked in scanners
     const inScanners = next.crew.filter((d) => d.location === 'scanners');
-    expect(inScanners).toHaveLength(0); // all 3 consumed and released
-    // All dice are now pool or locked on a threat (e.g. Distracted card drawn)
+    expect(inScanners).toHaveLength(3);
+    // All other dice are pool or locked on a threat (e.g. Distracted card drawn)
     const notAccountedFor = next.crew.filter(
-      (d) => d.location !== 'pool' && !String(d.location).startsWith('threat-'),
+      (d) =>
+        d.location !== 'pool' &&
+        d.location !== 'scanners' &&
+        !String(d.location).startsWith('threat-'),
     );
     expect(notAccountedFor).toHaveLength(0);
   });
