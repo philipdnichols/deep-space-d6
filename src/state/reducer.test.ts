@@ -1018,7 +1018,7 @@ describe('USE_SCIENCE_SHIELDS', () => {
       dieId: sciDie.id,
       stationId: 'science',
     });
-    const depleted: GameState = { ...assigned, shields: 0 };
+    const depleted: GameState = { ...assigned, shields: 0, nebulaActive: false };
     const result = gameReducer(depleted, { type: 'USE_SCIENCE_SHIELDS' });
     expect(result.shields).toBe(result.maxShields);
   });

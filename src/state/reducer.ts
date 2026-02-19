@@ -599,7 +599,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       // Normal mid-turn draw acknowledgement
-      return { ...state, phase: 'activating', drawnCard: null };
+      return { ...state, phase: 'activating', drawnCard: null, threatDieFace: null };
     }
 
     // ── Activating phase ──────────────────────────────────────────────────────
