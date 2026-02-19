@@ -132,6 +132,11 @@ If all 6 crew dice end up in the Infirmary simultaneously, the game is lost.
 
 ---
 
+## Setup
+
+After shuffling the threat deck, **draw 2 threat cards** and place them in their corresponding
+areas before the first turn begins. Their `immediateOnReveal` effects fire as normal.
+
 ## Turn Structure
 
 Each turn follows six phases in order:
@@ -249,8 +254,8 @@ triggers (but a destroyed Barrier cannot activate).
 
 | Card                 | Count per Difficulty |
 | -------------------- | -------------------- |
-| Don't Panic (Easy)   | 10                   |
-| Don't Panic (Normal) | 5                    |
+| Don't Panic (Easy)   | 6                    |
+| Don't Panic (Normal) | 3                    |
 | Don't Panic (Hard)   | 0                    |
 
 Filler cards are discarded on draw with no effect.
@@ -301,9 +306,9 @@ This is checked after any event that sends crew to the Infirmary.
 
 | Mode   | Don't Panic Cards | Character                                         |
 | ------ | ----------------- | ------------------------------------------------- |
-| Easy   | 10                | More breathing room between threat draws          |
-| Normal | 5                 | Standard challenge                                |
+| Easy   | 6                 | More breathing room between threat draws          |
+| Normal | 3                 | Standard challenge                                |
 | Hard   | 0                 | Relentless pressure — every draw is a real threat |
 
-All other rules are identical. Deck size varies: 24 cards (Hard), 29 (Normal), 34 (Easy),
+All other rules are identical. Deck size varies: 24 cards (Hard), 27 (Normal), 30 (Easy),
 plus Ouroboros always last.

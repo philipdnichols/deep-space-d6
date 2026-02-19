@@ -8,7 +8,11 @@ beforeEach(() => {
 });
 
 function playingState(): GameState {
-  return gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'normal' });
+  // NEW_GAME starts in 'drawing' for the 2-card setup sequence; step through both acknowledgements
+  let s = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'normal' });
+  s = gameReducer(s, { type: 'ACKNOWLEDGE_DRAW' }); // draw 2nd setup card
+  s = gameReducer(s, { type: 'ACKNOWLEDGE_DRAW' }); // finish setup → rolling
+  return s;
 }
 
 describe('makeInitialState', () => {
@@ -33,25 +37,33 @@ describe('NEW_GAME', () => {
     expect(s.status).toBe('playing');
   });
 
-  it('sets rolling phase', () => {
+  it('starts in drawing phase for setup card sequence', () => {
     const s = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'hard' });
-    expect(s.phase).toBe('rolling');
+    expect(s.phase).toBe('drawing');
+    expect(s.setupDrawsRemaining).toBe(2);
   });
 
   it('populates the deck with the correct size', () => {
+    // After NEW_GAME, the 1st setup card has already been drawn into activeThreats or discard.
+    // Total cards in circulation (deck + active + discard) equals the full built deck size.
+    // Core (14 internal + 9 external + 1 barrier + 1 Ouroboros) = 25; plus fillers: 6/3/0.
     const easy = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'easy' });
     const normal = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'normal' });
     const hard = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'hard' });
-    expect(easy.deck).toHaveLength(35);
-    expect(normal.deck).toHaveLength(30);
-    expect(hard.deck).toHaveLength(25);
+    const total = (s: GameState) => s.deck.length + s.activeThreats.length + s.discard.length;
+    expect(total(easy)).toBe(31);
+    expect(total(normal)).toBe(28);
+    expect(total(hard)).toBe(25);
   });
 
-  it('resets hull, shields, and crew', () => {
+  it('starts playing with full crew', () => {
+    // Hull/shields may already be affected by the 2 initial threat card reveals,
+    // so we only verify the game is running with all 6 crew dice present.
     const s = gameReducer(makeInitialState(), { type: 'NEW_GAME', difficulty: 'normal' });
-    expect(s.hull).toBe(8);
-    expect(s.shields).toBe(4);
-    expect(s.crew.every((d) => d.location === 'pool')).toBe(true);
+    expect(s.status).toBe('playing');
+    expect(s.crew).toHaveLength(6);
+    expect(s.hull).toBeLessThanOrEqual(s.maxHull);
+    expect(s.shields).toBeLessThanOrEqual(s.maxShields);
   });
 });
 
@@ -187,7 +199,7 @@ describe('ASSIGN_TO_STATION', () => {
   it('rejected outside assigning phase', () => {
     const s = playingState(); // rolling phase
     const next = gameReducer(s, { type: 'ASSIGN_TO_STATION', dieId: 0, stationId: 'tactical' });
-    expect(next.crew[0]!.location).toBe('pool');
+    expect(next).toBe(s);
   });
 
   it('rejected when die is not in pool (e.g. in scanners)', () => {
@@ -254,7 +266,10 @@ describe('USE_MEDICAL', () => {
   });
 
   it('recovers all crew from infirmary', () => {
-    const s = playingState();
+    const base = playingState();
+    // Reset all crew to pool so ROLL_COMPLETE can assign all 6 faces deterministically,
+    // regardless of what the random setup draws may have done to crew locations.
+    const s = { ...base, crew: base.crew.map((d) => ({ ...d, location: 'pool' as const })) };
     const assigning = gameReducer(s, {
       type: 'ROLL_COMPLETE',
       faces: ['medical', 'tactical', 'engineering', 'commander', 'science', 'engineering'],
@@ -290,9 +305,8 @@ describe('END_ASSIGN_PHASE', () => {
     const deckSizeBefore = assigning.deck.length;
     const next = gameReducer(assigning, { type: 'END_ASSIGN_PHASE' });
     expect(next.phase).toBe('drawing');
-    // One card drawn from deck
-    const totalAfter = next.deck.length + next.activeThreats.length + next.discard.length;
-    expect(totalAfter).toBe(deckSizeBefore);
+    // Exactly one card drawn from deck (may go to activeThreats or discard)
+    expect(next.deck.length).toBe(deckSizeBefore - 1);
   });
 });
 
@@ -400,7 +414,8 @@ describe('ACKNOWLEDGE_GATHER', () => {
 
   it('returns crew to pool and increments turn', () => {
     const s = playingState();
-    const gathering: GameState = { ...s, phase: 'gathering', turnNumber: 3 };
+    // Clear activeThreats so no crew are locked on threat cards (setup draws may have produced some)
+    const gathering: GameState = { ...s, phase: 'gathering', turnNumber: 3, activeThreats: [] };
     const next = gameReducer(gathering, { type: 'ACKNOWLEDGE_GATHER' });
     expect(next.phase).toBe('rolling');
     expect(next.turnNumber).toBe(4);
@@ -1191,8 +1206,9 @@ describe('END_ASSIGN_PHASE auto-engineering', () => {
       dieId: engDie.id,
       stationId: 'engineering',
     });
-    // Hull is already at max; use controlled deck so the draw doesn't deal random damage
-    const controlled: GameState = { ...assigned, deck: [FILLER_CARD] };
+    // Hull is already at max; use controlled deck so the draw doesn't deal random damage.
+    // Also reset hull to max since setup draws may have damaged it.
+    const controlled: GameState = { ...assigned, deck: [FILLER_CARD], hull: assigned.maxHull };
     const result = gameReducer(controlled, { type: 'END_ASSIGN_PHASE' });
     expect(result.hull).toBe(8);
     expect(result.log.some((l) => l.includes('auto-resolved'))).toBe(false);
@@ -1346,7 +1362,7 @@ describe('immediateOnReveal card with unknown id (covers dead-code line 129)', (
       immediateOnReveal: true, // not solar-winds-flagship or distracted
     };
     const s = assigningState();
-    const state: GameState = { ...s, activeThreats: [], deck: [syntheticCard] };
+    const state: GameState = { ...s, activeThreats: [], discard: [], deck: [syntheticCard] };
     const result = gameReducer(state, { type: 'END_ASSIGN_PHASE' });
     // Card falls through applyRevealEffect returning {} — not added anywhere
     expect(result.activeThreats).toHaveLength(0);

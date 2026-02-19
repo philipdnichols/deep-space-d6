@@ -2,8 +2,8 @@ import type { Difficulty, ThreatCard } from '../types/game';
 
 // ── Don't Panic counts per difficulty ─────────────────────────────────────────
 const DONT_PANIC_COUNTS: Record<Difficulty, number> = {
-  easy: 10,
-  normal: 5,
+  easy: 6,
+  normal: 3,
   hard: 0,
 };
 

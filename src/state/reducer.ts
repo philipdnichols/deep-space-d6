@@ -56,6 +56,7 @@ export function makeInitialState(): GameState {
     drawnCard: null,
     nebulaActive: false,
     commsOfflineActive: false,
+    setupDrawsRemaining: 0,
   };
 }
 
@@ -68,16 +69,21 @@ function startNewGame(difficulty: Difficulty): GameState {
     face: 'tactical' as const,
     location: 'pool' as const,
   }));
-  return {
+  let state: GameState = {
     ...makeInitialState(),
     status: 'playing',
     phase: 'rolling',
     difficulty,
     deck,
     crew,
-    log: ['Game started. Roll your crew dice.'],
+    log: ['Game started. Drawing 2 initial threat cards...'],
     turnNumber: 1,
   };
+
+  // Draw 1st setup card; player will acknowledge it, then draw the 2nd, then proceed to rolling
+  state = drawAndProcessCard({ ...state, setupDrawsRemaining: 2 });
+  state = withPassiveFlags({ ...state, phase: 'drawing' });
+  return withWinLossCheck(state);
 }
 
 /** Apply threat card effects on reveal. Returns updated state fields. */
@@ -561,7 +567,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'ACKNOWLEDGE_DRAW': {
       if (state.status !== 'playing' || state.phase !== 'drawing') return state;
-      if (state.status !== 'playing') return state;
+
+      // Setup sequence: draw the 2nd card, then return to rolling
+      if (state.setupDrawsRemaining >= 2) {
+        let next = drawAndProcessCard({ ...state, drawnCard: null, setupDrawsRemaining: 1 });
+        next = withPassiveFlags({ ...next, phase: 'drawing' });
+        return withWinLossCheck(next);
+      }
+      if (state.setupDrawsRemaining === 1) {
+        return withPassiveFlags({ ...state, phase: 'rolling', drawnCard: null, setupDrawsRemaining: 0 });
+      }
+
+      // Normal mid-turn draw acknowledgement
       return { ...state, phase: 'activating', drawnCard: null };
     }
 
@@ -580,9 +597,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const result = activateThreats(state, face);
 
-      // Handle time warp extra draw (discard reshuffle)
+      // Handle time warp discard reshuffle
       let deck = state.deck;
-      if (result.extraDraw || result.log.some((l) => l.includes('Time Warp'))) {
+      if (result.log.some((l) => l.includes('Time Warp'))) {
         // Time warp: shuffle top 3 discard back into deck
         const toReshuffle = state.discard.slice(-3);
         if (toReshuffle.length > 0) {

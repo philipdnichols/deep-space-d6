@@ -7,14 +7,14 @@ describe('buildDeck', () => {
     expect(deck[deck.length - 1]!.id).toBe('ouroboros');
   });
 
-  it("easy difficulty has 10 Don't Panic cards", () => {
+  it("easy difficulty has 6 Don't Panic cards", () => {
     const deck = buildDeck('easy');
-    expect(deck.filter((c) => c.id === 'dont-panic')).toHaveLength(10);
+    expect(deck.filter((c) => c.id === 'dont-panic')).toHaveLength(6);
   });
 
-  it("normal difficulty has 5 Don't Panic cards", () => {
+  it("normal difficulty has 3 Don't Panic cards", () => {
     const deck = buildDeck('normal');
-    expect(deck.filter((c) => c.id === 'dont-panic')).toHaveLength(5);
+    expect(deck.filter((c) => c.id === 'dont-panic')).toHaveLength(3);
   });
 
   it("hard difficulty has 0 Don't Panic cards", () => {
@@ -33,13 +33,12 @@ describe('buildDeck', () => {
   });
 
   it('deck size is consistent with difficulty', () => {
-    // 24 core + barrier + dont-panics + ouroboros at end
-    // core cards: 23 non-boss, 1 barrier = 24
-    // easy: 24 + 10 + 1 = 35
-    // normal: 24 + 5 + 1 = 30
-    // hard: 24 + 0 + 1 = 25
-    expect(buildDeck('easy')).toHaveLength(35);
-    expect(buildDeck('normal')).toHaveLength(30);
+    // Core: 14 internal + 9 external + 1 barrier = 24, plus Ouroboros always last = 25 non-filler
+    // easy: 25 + 6 = 31
+    // normal: 25 + 3 = 28
+    // hard: 25 + 0 = 25
+    expect(buildDeck('easy')).toHaveLength(31);
+    expect(buildDeck('normal')).toHaveLength(28);
     expect(buildDeck('hard')).toHaveLength(25);
   });
 

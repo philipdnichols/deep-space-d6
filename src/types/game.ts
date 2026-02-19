@@ -130,4 +130,8 @@ export interface GameState {
   readonly nebulaActive: boolean;
   // Comms offline: commander station disabled
   readonly commsOfflineActive: boolean;
+
+  // Setup draw sequence: counts down from 2 as the player acknowledges initial threat cards.
+  // While > 0, ACKNOWLEDGE_DRAW draws another setup card or returns to rolling instead of activating.
+  readonly setupDrawsRemaining: number;
 }
