@@ -1452,7 +1452,12 @@ describe('distracted immediate draw', () => {
       immediateOnReveal: true,
     };
     const s = assigningState();
-    const state: GameState = { ...s, deck: [distractedCard, ...s.deck.slice(1)] };
+    // Clear activeThreats so setup-drawn threats don't contaminate the count
+    const state: GameState = {
+      ...s,
+      activeThreats: [],
+      deck: [distractedCard, ...s.deck.slice(1)],
+    };
     const result = gameReducer(state, { type: 'END_ASSIGN_PHASE' });
     const distractedThreats = result.activeThreats.filter((t) => t.card.id === 'distracted');
     expect(distractedThreats).toHaveLength(1);
@@ -1477,8 +1482,10 @@ describe('distracted immediate draw', () => {
     };
     const s = assigningState();
     // Move all crew to infirmary so no pool die is available
+    // Clear activeThreats so setup-drawn threats don't contaminate the count
     const state: GameState = {
       ...s,
+      activeThreats: [],
       deck: [distractedCard, ...s.deck.slice(1)],
       crew: s.crew.map((d) => ({ ...d, location: 'infirmary' as const })),
     };

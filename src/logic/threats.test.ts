@@ -330,8 +330,25 @@ describe('checkCrewLoss', () => {
     expect(checkCrewLoss(crew)).toBe(false);
   });
 
-  it('returns true when no crew is in pool', () => {
+  it('returns false when all crew are assigned to stations (they return at gather)', () => {
+    const crew = [
+      makeDie(0, 'tactical'),
+      makeDie(1, 'tactical'),
+      makeDie(2, 'commander'),
+      makeDie(3, 'medical'),
+      makeDie(4, 'engineering'),
+      makeDie(5, 'science'),
+    ];
+    expect(checkCrewLoss(crew)).toBe(false);
+  });
+
+  it('returns true when all crew are in infirmary or scanners', () => {
     const crew = [makeDie(0, 'infirmary'), makeDie(1, 'scanners')];
+    expect(checkCrewLoss(crew)).toBe(true);
+  });
+
+  it('returns true when all crew are on away missions', () => {
+    const crew = [makeDie(0, 'threat-abc'), makeDie(1, 'threat-xyz')];
     expect(checkCrewLoss(crew)).toBe(true);
   });
 

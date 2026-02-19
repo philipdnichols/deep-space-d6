@@ -336,7 +336,12 @@ export function checkWin(
   return remaining.length === 0;
 }
 
-/** Check if player has lost due to no available crew. */
+/** Check if player has lost due to no available crew.
+ * Dice assigned to stations will return to pool at gather, so they are not incapacitated.
+ * Only infirmary, scanners, and active away missions (threat-*) count as truly unavailable. */
 export function checkCrewLoss(crew: ReadonlyArray<CrewDie>): boolean {
-  return crew.every((d) => d.location !== 'pool');
+  return crew.every(
+    (d) =>
+      d.location === 'infirmary' || d.location === 'scanners' || d.location.startsWith('threat-'),
+  );
 }
