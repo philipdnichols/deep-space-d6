@@ -575,7 +575,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return withWinLossCheck(next);
       }
       if (state.setupDrawsRemaining === 1) {
-        return withPassiveFlags({ ...state, phase: 'rolling', drawnCard: null, setupDrawsRemaining: 0 });
+        return withPassiveFlags({
+          ...state,
+          phase: 'rolling',
+          drawnCard: null,
+          setupDrawsRemaining: 0,
+        });
       }
 
       // Normal mid-turn draw acknowledgement
