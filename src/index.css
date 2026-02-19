@@ -1,68 +1,1144 @@
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Space palette */
+  --bg: #050a14;
+  --bg-panel: #0b1626;
+  --bg-card: #0f1e35;
+  --bg-card-hover: #152540;
+  --border: #1e3a5c;
+  --border-bright: #2a5490;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Station / crew face colours */
+  --commander: #f5c842;
+  --tactical: #e85d35;
+  --medical: #3ec77e;
+  --science: #4ab8f5;
+  --engineering: #f5923e;
+  --threat: #9c4dcc;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* Status */
+  --hull-high: #3ec77e;
+  --hull-mid: #f5c842;
+  --hull-low: #e85d35;
+  --shield: #4ab8f5;
+
+  /* Text */
+  --text: #c8d8ea;
+  --text-dim: #5a7a9a;
+  --text-bright: #e8f0f8;
+
+  /* Threat types */
+  --internal: #f5923e;
+  --external: #e85d35;
+  --boss: #9c4dcc;
+
+  /* Misc */
+  --radius: 8px;
+  --radius-sm: 4px;
+  --transition: 150ms ease;
+  --glow-scan: 0 0 12px #9c4dcc80;
+  --glow-tactical: 0 0 12px #e85d3580;
+  --glow-shield: 0 0 12px #4ab8f580;
+
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  background: var(--bg);
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.game-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 12px 12px;
+}
+
+/* ── Start Screen ─────────────────────────────────────────────────────────── */
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 32px;
+  text-align: center;
+}
+
+.start-screen__title {
+  font-size: 3rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow:
+    0 0 30px #4ab8f560,
+    0 0 60px #4ab8f520;
+}
+
+.start-screen__subtitle {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.start-screen__difficulty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.start-screen__difficulty label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.difficulty-btn {
+  padding: 10px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.difficulty-btn:hover:not(:disabled) {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+
+.difficulty-btn--active {
+  border-color: var(--science);
+  color: var(--science);
+  background: #0d1e3a;
+  box-shadow: 0 0 8px #4ab8f540;
+}
+
+.start-btn {
+  padding: 14px 48px;
+  background: #0d2a4a;
+  border: 1px solid var(--science);
+  color: var(--science);
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 0 16px #4ab8f540;
+}
+
+.start-btn:hover {
+  background: #102f52;
+  box-shadow: 0 0 24px #4ab8f580;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.header__title {
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.header__stats {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+}
+
+.stat-bar__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.stat-bar__track {
+  flex: 1;
+  height: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stat-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition:
+    width 400ms ease,
+    background 400ms ease;
+}
+
+.stat-bar__fill--hull-high {
+  background: var(--hull-high);
+}
+.stat-bar__fill--hull-mid {
+  background: var(--hull-mid);
+}
+.stat-bar__fill--hull-low {
+  background: var(--hull-low);
+}
+.stat-bar__fill--shield {
+  background: var(--shield);
+  box-shadow: var(--glow-shield);
+}
+
+.stat-bar__value {
+  font-size: 0.8rem;
+  color: var(--text);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.header__turn {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.header__timer {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.header__new-game {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.header__new-game:hover {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+
+/* ── Main play area ──────────────────────────────────────────────────────── */
+.game-board {
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  flex: 1;
+  padding-top: 10px;
+  min-height: 0;
+}
+
+/* ── Panels ──────────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel__title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Stations ────────────────────────────────────────────────────────────── */
+.stations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.station {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--bg-card);
+  transition: all var(--transition);
+}
+
+.station--can-drop {
+  border-color: var(--border-bright);
+  cursor: pointer;
+}
+
+.station--can-drop:hover {
+  background: var(--bg-card-hover);
+}
+
+.station__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.station__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.station__name {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.station--commander .station__name {
+  color: var(--commander);
+}
+.station--tactical .station__name {
+  color: var(--tactical);
+}
+.station--medical .station__name {
+  color: var(--medical);
+}
+.station--science .station__name {
+  color: var(--science);
+}
+.station--engineering .station__name {
+  color: var(--engineering);
+}
+.station--scanners .station__name {
+  color: var(--threat);
+}
+.station--infirmary .station__name {
+  color: var(--text-dim);
+}
+
+.station__dice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 28px;
+}
+
+.station__actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.station-action-btn {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #0d1e35;
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+}
+
+.station-action-btn:hover:not(:disabled) {
+  background: #152540;
+  box-shadow: 0 0 8px #4ab8f530;
+}
+
+.station__disabled-note {
+  font-size: 0.65rem;
+  color: var(--threat);
+  margin-top: 2px;
+}
+
+/* ── Threats area ────────────────────────────────────────────────────────── */
+.threats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.threats-section__heading {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.threats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.threat-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--bg-card);
+  transition: all var(--transition);
+}
+
+.threat-card--internal {
+  border-left: 3px solid var(--internal);
+}
+.threat-card--external {
+  border-left: 3px solid var(--external);
+}
+.threat-card--boss-barrier {
+  border-left: 3px solid var(--boss);
+}
+
+.threat-card--can-target:hover,
+.threat-card--can-assign:hover {
+  background: var(--bg-card-hover);
+  cursor: pointer;
+}
+
+.threat-card--can-target:hover {
+  border-color: var(--tactical);
+}
+.threat-card--can-assign:hover {
+  border-color: var(--engineering);
+}
+
+.threat-card__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.threat-card__name {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-bright);
+  flex: 1;
+}
+
+.threat-card__symbol {
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.threat-card__symbol--skull {
+  background: #3a1010;
+  color: #e85d35;
+}
+.threat-card__symbol--lightning {
+  background: #2a2a08;
+  color: #f5c842;
+}
+.threat-card__symbol--alien {
+  background: #1a0a2e;
+  color: #9c4dcc;
+}
+.threat-card__symbol--warning {
+  background: #2a1800;
+  color: #f5923e;
+}
+.threat-card__symbol--hazard {
+  background: #0a1e2a;
+  color: #4ab8f5;
+}
+.threat-card__symbol--nova {
+  background: #0a2a1a;
+  color: #3ec77e;
+}
+
+.threat-card__health {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--tactical);
+  flex-wrap: wrap;
+}
+
+.threat-card__health-pips {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.threat-card__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tactical);
+}
+
+.threat-card__pip--empty {
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.threat-card__desc {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.threat-card__resolution {
+  font-size: 0.65rem;
+  color: var(--engineering);
+  margin-top: 4px;
+}
+
+.threat-card__away-mission {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.threat-card__stasis {
+  font-size: 0.65rem;
+  color: var(--science);
+  margin-top: 4px;
+}
+
+/* ── Dice ────────────────────────────────────────────────────────────────── */
+.dice-pool-panel {
+  grid-column: 1 / -1;
+  min-height: auto;
+}
+
+.dice-pool {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dice-pool__dice {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.die {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.die--commander {
+  border-color: var(--commander);
+}
+.die--tactical {
+  border-color: var(--tactical);
+}
+.die--medical {
+  border-color: var(--medical);
+}
+.die--science {
+  border-color: var(--science);
+}
+.die--engineering {
+  border-color: var(--engineering);
+}
+.die--threat {
+  border-color: var(--threat);
+  box-shadow: var(--glow-scan);
+}
+
+.die--selected {
+  box-shadow:
+    0 0 0 2px white,
+    0 0 16px rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.die--rolling {
+  animation: roll 0.6s ease-in-out;
+}
+
+.die--small {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border-width: 1px;
+}
+
+.die--tiny {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border-width: 1px;
+}
+
+.die--pool:hover:not(.die--selected):not(.die--locked) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.die--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.die__icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.die__label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+.die--small .die__icon {
+  font-size: 0.9rem;
+}
+.die--small .die__label {
+  display: none;
+}
+.die--tiny .die__icon {
+  font-size: 0.7rem;
+}
+.die--tiny .die__label {
+  display: none;
+}
+
+@keyframes roll {
+  0% {
+    transform: rotate(0deg) scale(1);
   }
-  a:hover {
-    color: #747bff;
+  20% {
+    transform: rotate(-15deg) scale(0.95);
   }
-  button {
-    background-color: #f9f9f9;
+  40% {
+    transform: rotate(20deg) scale(1.05);
   }
+  60% {
+    transform: rotate(-10deg) scale(0.98);
+  }
+  80% {
+    transform: rotate(8deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* ── Threat die ──────────────────────────────────────────────────────────── */
+.threat-die-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.threat-die {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  border: 2px solid var(--border-bright);
+  background: #120820;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.threat-die--rolling {
+  animation: roll 0.8s ease-in-out;
+  border-color: var(--threat);
+  box-shadow: var(--glow-scan);
+}
+
+.threat-die__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.threat-die__label {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ── Phase / action bar ──────────────────────────────────────────────────── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.action-bar__phase {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.action-bar__buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  padding: 10px 28px;
+  background: #0d2a4a;
+  border: 1px solid var(--science);
+  color: var(--science);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px #4ab8f540;
+}
+
+.primary-btn:hover:not(:disabled) {
+  box-shadow: 0 0 16px #4ab8f580;
+  background: #102f52;
+}
+
+.secondary-btn {
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+
+.action-bar__instructions {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* ── Game log ────────────────────────────────────────────────────────────── */
+.game-log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 300px;
+}
+
+.game-log__entry {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
+.game-log__entry--highlight {
+  color: var(--text);
+}
+.game-log__entry--damage {
+  color: var(--hull-low);
+}
+.game-log__entry--heal {
+  color: var(--medical);
+}
+.game-log__entry--threat {
+  color: var(--internal);
+}
+
+/* ── Drawn card display ──────────────────────────────────────────────────── */
+.drawn-card-display {
+  padding: 12px;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  animation: fadeIn 300ms ease;
+}
+
+.drawn-card-display__heading {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Centre column ───────────────────────────────────────────────────────── */
+.centre-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 150ms ease;
+}
+
+.modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 480px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal__title {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.modal__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal__face-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.modal__die-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: all var(--transition);
+}
+
+.modal__die-option:hover {
+  border-color: var(--commander);
+  background: var(--bg-card-hover);
+}
+
+.modal__die-option span {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.science-threat-option {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  width: 100%;
+}
+
+.science-threat-option:hover {
+  border-color: var(--science);
+  background: var(--bg-card-hover);
+}
+
+.tactical-threat-option {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  width: 100%;
+}
+
+.tactical-threat-option:hover {
+  border-color: var(--tactical);
+  background: var(--bg-card-hover);
+}
+
+.modal__cancel-btn {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modal__cancel-btn:hover {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+
+/* ── Win / Loss overlay ──────────────────────────────────────────────────── */
+.win-loss-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 400ms ease;
+}
+
+.win-loss-card {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.win-loss-card--won {
+  border: 1px solid var(--hull-high);
+  box-shadow: 0 0 40px #3ec77e30;
+}
+.win-loss-card--lost {
+  border: 1px solid var(--hull-low);
+  box-shadow: 0 0 40px #e85d3530;
+}
+
+.win-loss-card__icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.win-loss-card__title {
+  font-size: 1.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.win-loss-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.win-loss-card__stats {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Passive warnings ─────────────────────────────────────────────────────── */
+.passive-warnings {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.passive-warning {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.passive-warning--nebula {
+  background: #0d1e30;
+  border: 1px solid var(--science);
+  color: var(--science);
+}
+.passive-warning--comms {
+  background: #1a0a2e;
+  border: 1px solid var(--threat);
+  color: var(--threat);
+}
+.passive-warning--timewarp {
+  background: #2a1a00;
+  border: 1px solid var(--internal);
+  color: var(--internal);
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}
+
+/* ── Deck counter ────────────────────────────────────────────────────────── */
+.deck-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.deck-counter__count {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.deck-counter__label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+/* ── Commander die chooser ───────────────────────────────────────────────── */
+.target-die-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.target-die-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.target-die-btn:hover {
+  border-color: var(--commander);
+  background: var(--bg-card-hover);
 }
