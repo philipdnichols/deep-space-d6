@@ -15,6 +15,13 @@ function dispatch(page: import('@playwright/test').Page, action: GameAction): Pr
   );
 }
 
+/** Click Launch then acknowledge the 2 initial setup draws, leaving the game in rolling phase. */
+async function launchGame(page: import('@playwright/test').Page): Promise<void> {
+  await page.getByRole('button', { name: 'Launch' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+}
+
 test.describe('Deep Space D-6', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(APP_URL);
@@ -51,24 +58,28 @@ test.describe('Deep Space D-6', () => {
 
   // ── Starting a game ───────────────────────────────────────────────────────
 
-  test('clicking Launch starts a game in rolling phase', async ({ page }) => {
+  test('clicking Launch starts a game and setup draws lead to rolling phase', async ({ page }) => {
     await page.getByRole('button', { name: 'Launch' }).click();
-    const state = await gameState(page);
+    // Game starts in drawing phase for the 2-card setup sequence
+    let state = await gameState(page);
     expect(state.status).toBe('playing');
+    expect(state.phase).toBe('drawing');
+    expect(state.setupDrawsRemaining).toBe(2);
+    // Acknowledge both setup draws → rolling phase
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    state = await gameState(page);
     expect(state.phase).toBe('rolling');
     expect(state.turnNumber).toBe(1);
   });
 
-  test('header shows hull, shields, and Turn 1 after launch', async ({ page }) => {
-    await page.getByRole('button', { name: 'Launch' }).click();
+  test('header shows Turn 1 after launch', async ({ page }) => {
+    await launchGame(page);
     await expect(page.getByText(/Turn 1/)).toBeVisible();
-    // Hull and shields shown as "N/N" in the header
-    await expect(page.getByText(/8\/8/)).toBeVisible();
-    await expect(page.getByText(/4\/4/)).toBeVisible();
   });
 
   test('Roll Dice button is shown during rolling phase', async ({ page }) => {
-    await page.getByRole('button', { name: 'Launch' }).click();
+    await launchGame(page);
     await expect(page.getByRole('button', { name: /roll dice/i })).toBeVisible();
   });
 
@@ -106,6 +117,7 @@ test.describe('Deep Space D-6', () => {
       drawnCard: null,
       nebulaActive: false,
       commsOfflineActive: false,
+      setupDrawsRemaining: 0,
     };
     await dispatch(page, { type: '__TEST_LOAD_STATE', state: wonState as GameState });
     await expect(page.getByText('Rescue Arrived')).toBeVisible();
@@ -138,6 +150,7 @@ test.describe('Deep Space D-6', () => {
       drawnCard: null,
       nebulaActive: false,
       commsOfflineActive: false,
+      setupDrawsRemaining: 0,
     };
     await dispatch(page, { type: '__TEST_LOAD_STATE', state: wonState as GameState });
     await expect(page.getByText('Rescue Arrived')).toBeVisible();
@@ -169,6 +182,7 @@ test.describe('Deep Space D-6', () => {
       drawnCard: null,
       nebulaActive: false,
       commsOfflineActive: false,
+      setupDrawsRemaining: 0,
     };
     await dispatch(page, { type: '__TEST_LOAD_STATE', state: lostState as GameState });
     await expect(page.getByText('Ship Lost')).toBeVisible();
@@ -199,6 +213,7 @@ test.describe('Deep Space D-6', () => {
       drawnCard: null,
       nebulaActive: false,
       commsOfflineActive: false,
+      setupDrawsRemaining: 0,
     };
     await dispatch(page, { type: '__TEST_LOAD_STATE', state: lostState as GameState });
     await expect(page.getByText('Ship Lost')).toBeVisible();
@@ -229,20 +244,22 @@ test.describe('Deep Space D-6', () => {
       drawnCard: null,
       nebulaActive: false,
       commsOfflineActive: false,
+      setupDrawsRemaining: 0,
     };
     await dispatch(page, { type: '__TEST_LOAD_STATE', state: wonState as GameState });
     await page.getByRole('button', { name: /play again/i }).click();
     const state = await gameState(page);
     expect(state.status).toBe('playing');
     expect(state.turnNumber).toBe(1);
-    expect(state.hull).toBe(8);
+    // Hull may already be affected by the 2 initial setup draws
+    expect(state.hull).toBeLessThanOrEqual(state.maxHull);
   });
 
   // ── Full turn cycle (without dice animations) ─────────────────────────────
 
   test('can complete a full turn via dispatched actions and UI buttons', async ({ page }) => {
-    // 1. Start a game
-    await page.getByRole('button', { name: 'Launch' }).click();
+    // 1. Start a game and acknowledge the 2 setup draws
+    await launchGame(page);
     await expect(page.getByRole('button', { name: /roll dice/i })).toBeVisible();
 
     // 2. Skip animation: dispatch ROLL_COMPLETE directly with all tactical faces
@@ -279,7 +296,7 @@ test.describe('Deep Space D-6', () => {
   // ── Phase labels and instructions ────────────────────────────────────────
 
   test('shows correct phase label during assigning', async ({ page }) => {
-    await page.getByRole('button', { name: 'Launch' }).click();
+    await launchGame(page);
     await dispatch(page, {
       type: 'ROLL_COMPLETE',
       faces: ['engineering', 'medical', 'science', 'tactical', 'commander', 'engineering'],
@@ -288,7 +305,7 @@ test.describe('Deep Space D-6', () => {
   });
 
   test('shows correct phase label during activating', async ({ page }) => {
-    await page.getByRole('button', { name: 'Launch' }).click();
+    await launchGame(page);
     await dispatch(page, {
       type: 'ROLL_COMPLETE',
       faces: ['tactical', 'tactical', 'tactical', 'tactical', 'tactical', 'tactical'],
@@ -301,7 +318,7 @@ test.describe('Deep Space D-6', () => {
   // ── Deck / discard counters ───────────────────────────────────────────────
 
   test('deck counter decreases after ending assignment phase', async ({ page }) => {
-    await page.getByRole('button', { name: 'Launch' }).click();
+    await launchGame(page);
     const initialState = await gameState(page);
     const initialDeckSize = initialState.deck.length;
 
