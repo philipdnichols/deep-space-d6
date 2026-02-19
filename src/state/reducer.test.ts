@@ -1034,7 +1034,8 @@ describe('USE_COMMANDER_REROLL', () => {
       dieId: cmdDie.id,
       stationId: 'commander',
     });
-    const result = gameReducer(assigned, { type: 'USE_COMMANDER_REROLL' });
+    const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+    const result = gameReducer(safeAssigned, { type: 'USE_COMMANDER_REROLL' });
     expect(result.log.some((l) => l.includes('re-rolled'))).toBe(true);
   });
 
@@ -1083,8 +1084,9 @@ describe('USE_COMMANDER_CHANGE', () => {
       dieId: cmdDie.id,
       stationId: 'commander',
     });
-    const tactDie = assigned.crew.find((d) => d.face === 'tactical' && d.location === 'pool')!;
-    const result = gameReducer(assigned, {
+    const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+    const tactDie = safeAssigned.crew.find((d) => d.face === 'tactical' && d.location === 'pool')!;
+    const result = gameReducer(safeAssigned, {
       type: 'USE_COMMANDER_CHANGE',
       targetDieId: tactDie.id,
       newFace: 'science',
@@ -1107,8 +1109,9 @@ describe('USE_COMMANDER_CHANGE', () => {
       dieId: cmdDie.id,
       stationId: 'commander',
     });
-    const tactDie = assigned.crew.find((d) => d.face === 'tactical' && d.location === 'pool')!;
-    const result = gameReducer(assigned, {
+    const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+    const tactDie = safeAssigned.crew.find((d) => d.face === 'tactical' && d.location === 'pool')!;
+    const result = gameReducer(safeAssigned, {
       type: 'USE_COMMANDER_CHANGE',
       targetDieId: tactDie.id,
       newFace: 'threat',
@@ -1530,7 +1533,8 @@ describe('USE_COMMANDER_REROLL — threat face rolled', () => {
         dieId: cmdDie.id,
         stationId: 'commander',
       });
-      const result = gameReducer(assigned, { type: 'USE_COMMANDER_REROLL' });
+      const safeAssigned: GameState = { ...assigned, commsOfflineActive: false };
+      const result = gameReducer(safeAssigned, { type: 'USE_COMMANDER_REROLL' });
       // With Math.random() always returning 0.9, all pool dice get 'threat' face → scanners
       const inScanners = result.crew.filter((d) => d.location === 'scanners');
       expect(inScanners.length).toBeGreaterThan(0);
