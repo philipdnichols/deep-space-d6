@@ -257,17 +257,17 @@ Filler cards are discarded on draw with no effect.
 
 ---
 
-## Passive Flags
+## Passive Effects
 
-Some internal threats set ship-wide flags while they remain active:
+Some internal threats impose a continuous ship-wide effect for as long as they remain active:
 
-| Flag                 | Set By                          | Effect                                                                  |
-| -------------------- | ------------------------------- | ----------------------------------------------------------------------- |
-| `nebulaActive`       | Nebula in active threats        | Science cannot recharge shields                                         |
-| `commsOfflineActive` | Comms Offline in active threats | Commander station disabled; activating Comms Offline draws 1 extra card |
-| `timeWarpActive`     | Time Warp in active threats     | External threats cannot be reduced below 1 HP by Tactical               |
+| Threat        | Passive Effect                                                      |
+| ------------- | ------------------------------------------------------------------- |
+| Nebula        | Science cannot recharge shields                                     |
+| Comms Offline | Commander station disabled; activating it draws 1 extra threat card |
+| Time Warp     | External threats cannot be reduced below 1 HP by Tactical fire      |
 
-These flags are recomputed after every state change based on `activeThreats`.
+These effects apply immediately when the card enters play and lift the moment it is resolved or discarded.
 
 ---
 
@@ -286,14 +286,14 @@ elapsed, hull remaining, and difficulty.
 In practice, because Ouroboros is always last, winning requires clearing all external
 threats and destroying Ouroboros itself.
 
-### Loss — Hull (lossReason: 'hull')
+### Loss — Hull failure
 
-Hull reaches 0. "Critical hull failure. The RPTR was destroyed in the engagement."
+Hull reaches 0. The RPTR is destroyed.
 
-### Loss — Crew (lossReason: 'crew')
+### Loss — Crew incapacitated
 
-All 6 crew dice are simultaneously in the Infirmary (checked after any event that sends
-crew to the Infirmary). "All crew incapacitated. The ship drifts without a crew."
+All 6 crew dice are simultaneously in the Infirmary. The ship drifts without anyone to operate it.
+This is checked after any event that sends crew to the Infirmary.
 
 ---
 
@@ -307,28 +307,3 @@ crew to the Infirmary). "All crew incapacitated. The ship drifts without a crew.
 
 All other rules are identical. Deck size varies: 24 cards (Hard), 29 (Normal), 34 (Easy),
 plus Ouroboros always last.
-
----
-
-## Implementation Notes
-
-### State architecture
-
-- Single `GameState` object (all `readonly`) owned by `useReducer` in App
-- All game logic in pure functions in `src/logic/` — no React dependencies
-- Reducer delegates to logic functions; never contains inline game rules
-- `__TEST_LOAD_STATE` action allows Playwright e2e tests to inject arbitrary states
-
-### Randomness
-
-- Crew dice rolled via `rollAllCrewDice(count)` in `src/logic/dice.ts`
-- Threat die rolled via `rollThreatDie()` — returns one of the 6 ThreatSymbols
-- Deck shuffled once at game start via Fisher-Yates in `src/logic/deck.ts`
-- No randomness inside the reducer — random values are computed before dispatch
-
-### Coverage
-
-Unit tests achieve: **97.7% statements / 95.2% branches / 100% functions / 100% lines**
-
-The uncovered branches are dead-code paths that cannot be reached in valid game flow
-(redundant guards after identical checks), accepted as permanent gaps.
